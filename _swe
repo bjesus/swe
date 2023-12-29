@@ -1,0 +1,11 @@
+#compdef swe
+
+_swe() {
+  if (( ${#words[-1]} >= 2 )); then
+    local -a args
+    args=($(swe -s ${(M)${words[-1]}:t}))
+    _describe -t arg 'arguments' args && ret=0
+  fi
+}
+
+_swe "$@"
