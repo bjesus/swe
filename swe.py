@@ -30,6 +30,10 @@ def search_words(xml_file, search_string):
     result = [word.attrib['value'] for word in root.findall('.//word[@value]') if search_string in word.attrib['value']]
     return result
 
+def print_header(text):
+    print(f"\n\033[3m{text}\033[0m")
+
+
 def print_translations(xml_file, search_word):
     found_word = False
     tree = ET.parse(xml_file)
@@ -52,7 +56,7 @@ def print_translations(xml_file, search_word):
                 print(", ".join(inflection.attrib['value'] for inflection in inflections))
             translations = word.findall('./translation[@value]')
             if translations:
-                print('\n\033[4:1mTranslations\033[0m')
+                print_header("Translations")
                 for translation in translations:
                     comment = translation.get('comment', '')
                     print(f'- \033[1m{html.unescape(translation.attrib["value"])}\033[0m', end='')
@@ -63,7 +67,7 @@ def print_translations(xml_file, search_word):
 
             synonyms = word.findall('./synonym[@value]')
             if synonyms:
-                print('\n\033[4:1mSynonyms\033[0m')
+                print_header("Synonyms")
                 for synonym in synonyms:
                     level = synonym.get('level', '')
                     print(f'- {html.unescape(synonym.attrib["value"])}', end='')
@@ -74,7 +78,7 @@ def print_translations(xml_file, search_word):
 
             examples = word.findall('.//example[@value]')
             if examples:
-                print('\n\033[4:1mExamples\033[0m')
+                print_header("Examples")
                 for example in examples:
                     example_translation = example.find('.//translation[@value]')
                     if example_translation is not None:
@@ -82,7 +86,7 @@ def print_translations(xml_file, search_word):
 
             related = word.findall('./related[@value]')
             if related:
-                print('\n\033[4:1mRelated\033[0m')
+                print_header("Related")
                 for rel in related:
                     rel_type = rel.get('type', '')
                     rel_translation = rel.find('./translation[@value]')
@@ -91,7 +95,7 @@ def print_translations(xml_file, search_word):
 
             idioms = word.findall('./idiom[@value]')
             if idioms:
-                print('\n\033[4:1mIdioms\033[0m')
+                print_header("Idioms")
                 for idiom in idioms:
                     idiom_translation = idiom.find('./translation[@value]')
                     if idiom_translation is not None:
