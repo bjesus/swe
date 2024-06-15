@@ -25,11 +25,11 @@ def encode_iso(word):
     return "".join(iso_mapping.get(char, char) for char in word)
 
 
-def play_word_sound(word):
+def play_file(word):
     iso_word = encode_iso(word)
     sound_url = f"http://lexin.nada.kth.se/sound/{iso_word}.mp3"
     os.environ["MPLAYER_VERBOSE"] = "-4"
-    os.system(f"mplayer -quiet {sound_url}")
+    os.system(f"mplayer -really-quiet {sound_url}")
 
 
 def search_words(xml_file, search_string):
@@ -47,6 +47,22 @@ def print_header(text):
     print(f"\n\033[3m{text}\033[0m")
 
 
+def get_sound_file(xml_file, search_word):
+    sound_file = False
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    for word in root.findall(".//word[@value]"):
+        word_value = word.attrib["value"]
+        inflections = word.findall("./paradigm/inflection[@value]")
+        if word_value == search_word or any(
+            inflection.attrib["value"] == search_word for inflection in inflections
+        ):
+            phonetic = word.findall("./phonetic[@soundFile]")
+            if phonetic:
+                sound_file = phonetic[0].attrib["soundFile"].replace(".swf", "")
+            return (word.attrib["value"], sound_file)
+
+
 def print_translations(xml_file, search_word):
     found_word = False
     tree = ET.parse(xml_file)
@@ -62,8 +78,7 @@ def print_translations(xml_file, search_word):
             print(f"\033[58;5;158m\033[4:2m\033[1m{word_value}\033[0m", end="")
             if "class" in word.attrib:
                 print(f" ({word.attrib['class']})", end="")
-            with open(last_word_file, "w") as f:
-                f.write(word_value)
+
             if comment:
                 print(f" ({html.unescape(comment)})")
             else:
@@ -78,7 +93,7 @@ def print_translations(xml_file, search_word):
                 for translation in translations:
                     comment = translation.get("comment", "")
                     print(
-                        f'- \033[1m{html.unescape(translation.attrib["value"])}\033[0m',
+                        f'-> \033[1m{html.unescape(translation.attrib["value"])}\033[0m',
                         end="",
                     )
                     if comment:
@@ -145,28 +160,48 @@ def main():
         "--search",
         dest="search_string",
         required=False,
-        help="String to search for",
+        help="Search words in the dictionary",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--play",
+        dest="play_word",
+        required=False,
+        help="Play a word",
     )
     args = parser.parse_args()
+
+    last_searched_word = False
+    if os.path.exists(last_word_file):
+        with open(last_word_file, "r") as f:
+            last_searched_word = f.read().strip()
 
     if args.search_string:
         result = search_words(xml_file, args.search_string)
         print("\n".join(result))
+    elif args.play_word:
+        play_word(args.play_word)
     elif args.word:
-        print_translations(xml_file, args.word)
-    else:
-
-        if os.path.exists(last_word_file):
-            with open(last_word_file, "r") as f:
-                last_searched_word = f.read().strip()
-            if last_searched_word:
-                print("Playing the word", last_searched_word, "\n")
-                play_word_sound(last_searched_word)
-                return
+        if args.word != last_searched_word:
+            with open(last_word_file, "w") as f:
+                f.write(args.word)
+            print_translations(xml_file, args.word)
         else:
-            print(
-                "swe\n\nUsage: 'swe ord' OR 'swe -s ord'\nAfter printing a definition, rerun 'swe' to hear it"
-            )
+            play_word(last_searched_word)
+    else:
+        print(
+            "swe\n\nUsage: 'swe ord' OR 'swe -s ord'\nAfter printing a definition, rerun 'swe' to hear it"
+        )
+
+
+def play_word(word):
+    word_root, sound_file = get_sound_file(xml_file, word)
+    if sound_file:
+        print("Playing the word", word_root, "\n")
+        play_file(sound_file)
+    else:
+        print("Cannot file sound file for", word_root)
 
 
 if __name__ == "__main__":
