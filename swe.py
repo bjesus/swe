@@ -100,8 +100,8 @@ def print_translations(xml_file, search_word):
                     idiom_translation = idiom.find('./translation[@value]')
                     if idiom_translation is not None:
                         print(f'- {html.unescape(idiom.attrib["value"])}: {html.unescape(idiom_translation.attrib["value"])}')
+            print("")
 
-            return
     if not found_word:
         print(f'Word "{search_word}" not found in the XML file.')
 
