@@ -45,8 +45,10 @@ def print_translations(xml_file, search_word):
         if word_value == search_word or any(inflection.attrib['value'] == search_word for inflection in inflections):
             found_word = True
             comment = word.get('comment', '')
-            print(word_value, end='')
             with open(last_word_file, 'w') as f:
+            print(f"\033[58;5;158m\033[4:2m\033[1m{word_value}\033[0m", end="")
+            if "class" in word.attrib:
+                print(f" ({word.attrib['class']})", end="")
                 f.write(word_value)
             if comment:
                 print(f' ({html.unescape(comment)})')
