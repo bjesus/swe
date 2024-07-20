@@ -1,6 +1,6 @@
 [project]
 name = "swe"
-version = "0.2.0"
+version = "0.3.0"
 description = "Command line interface for Folkets lexikon, the Swedish-English dictionary"
 authors = [
     { name = "Yo'av Moshe", email = "swe@yoavmoshe.com" }
