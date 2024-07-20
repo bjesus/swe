@@ -9,3 +9,53 @@
 #   generate-hashes: false
 
 -e file:.
+beautifulsoup4==4.12.3
+    # via markdownify
+certifi==2024.7.4
+    # via requests
+charset-normalizer==3.3.2
+    # via requests
+editdistance==0.8.1
+    # via swe
+idna==3.7
+    # via requests
+linkify-it-py==2.0.3
+    # via markdown-it-py
+lxml==5.2.2
+    # via swe
+markdown-it-py==3.0.0
+    # via mdit-py-plugins
+    # via rich
+    # via textual
+markdownify==0.12.1
+    # via swe
+mdit-py-plugins==0.4.1
+    # via markdown-it-py
+mdurl==0.1.2
+    # via markdown-it-py
+mwclient==0.10.1
+    # via swe
+oauthlib==3.2.2
+    # via requests-oauthlib
+pygments==2.18.0
+    # via rich
+requests==2.32.3
+    # via requests-oauthlib
+    # via swe
+requests-oauthlib==2.0.0
+    # via mwclient
+rich==13.7.1
+    # via textual
+six==1.16.0
+    # via markdownify
+    # via mwclient
+soupsieve==2.5
+    # via beautifulsoup4
+textual==0.72.0
+    # via swe
+typing-extensions==4.12.2
+    # via textual
+uc-micro-py==1.0.3
+    # via linkify-it-py
+urllib3==2.2.2
+    # via requests

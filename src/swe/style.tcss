@@ -1,0 +1,14 @@
+Screen {
+    layout: grid;
+    grid-size: 1 2;
+    grid-rows: auto 1fr;
+}
+
+.search {
+  border: round $accent;
+}
+
+.autocomplete--left-column {
+  color: $success-lighten-3;
+}
+
