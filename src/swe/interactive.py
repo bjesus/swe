@@ -14,123 +14,122 @@ from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
 from swe.common import xml_file
 from swe.sounds import play_word
 
-MAX_DROPDOWN_ITEMS = 50
-
-visible_word = ""
-wiktionary_content = ""
-
-DATA = []
-
-tree = ET.parse(xml_file)
-root = tree.getroot()
-for word in root.findall(".//word[@value]"):
-    entry = [
-        word.attrib["value"],
-        ", ".join([t.attrib["value"] for t in word.findall("./translation")]),
-        " ".join(
-            [t.attrib["value"] for t in word.findall("./paradigm/inflection[@value]")]
-        ),
-    ]
-
-    DATA.append(entry)
-
-
 items = []
-
-for rank, (word, translation, inflections) in enumerate(DATA, start=2):
-    items.append(
-        DropdownItem(
-            word,
-            translation,
-            inflections,
-        )
-    )
-
-
-def get_items(input_state: InputState) -> list[DropdownItem]:
-    matches = [
-        item
-        for item in items
-        if input_state.value.lower() in item.main.plain.lower()
-        or input_state.value.lower() in item.left_meta.plain.lower()
-        or input_state.value.lower() in item.right_meta.plain.lower()
-    ]
-
-    return sorted(
-        matches,
-        key=lambda v: editdistance.eval(v.main.plain, input_state.value.lower()),
-    )[:MAX_DROPDOWN_ITEMS]
-
-
-def get_answer(search_word) -> str:
-    answer = ""
-    for word in root.findall(".//word[@value]"):
-        word_value = word.attrib["value"]
-        inflections = word.findall("./paradigm/inflection[@value]")
-
-        if word_value == search_word or any(
-            inflection.attrib["value"] == search_word for inflection in inflections
-        ):
-            comment = word.get("comment", "")
-            answer += "## " + word_value
-
-            if inflections:
-                answer += (
-                    "\n`"
-                    + (
-                        ", ".join(
-                            inflection.attrib["value"] for inflection in inflections
-                        )
-                    )
-                    + "`\n"
-                )
-
-            translations = word.findall("./translation[@value]")
-            if translations:
-                answer += "\n\n**"
-
-                answer += ", ".join(
-                    (
-                        f"{translation.attrib["value"]}</span> ({translation.attrib["comment"]})"
-                        if translation.get("comment", "")
-                        else "" + translation.attrib["value"] + ""
-                    )
-                    for translation in translations
-                )
-                answer += "**"
-            if comment:
-                answer += f"\n\n*{comment}*"
-            synonyms = word.findall("./synonym[@value]")
-            if synonyms:
-                answer += "\n\n### Synonyms\n"
-                answer += ", ".join(synonym.attrib["value"] for synonym in synonyms)
-                answer += ""
-
-            examples = word.findall(".//example[@value]")
-            if examples:
-                answer += "\n\n### Examples"
-                for example in examples:
-                    example_translation = example.find(".//translation[@value]")
-                    if example_translation is not None:
-                        answer += f"\n- {example.attrib["value"]}: *{example_translation.attrib["value"]}*"
-                answer += ""
-
-            idioms = word.findall("./idiom[@value]")
-            if idioms:
-                answer += "\n\n ### Idioms"
-                for idiom in idioms:
-                    idiom_translation = idiom.find("./translation[@value]")
-                    if idiom_translation is not None:
-                        answer += f"\n- {idiom.attrib["value"]}: *{idiom_translation.attrib["value"]}*"
-                answer += ""
-
-            return answer
-
-    return "Word not found"
+MAX_DROPDOWN_ITEMS = 50
 
 
 class SvenskaApp(App):
     """A Swedish-English dictionary."""
+
+    visible_word = ""
+    wiktionary_content = ""
+
+    DATA = []
+
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    for word in root.findall(".//word[@value]"):
+        entry = [
+            word.attrib["value"],
+            ", ".join([t.attrib["value"] for t in word.findall("./translation")]),
+            " ".join(
+                [
+                    t.attrib["value"]
+                    for t in word.findall("./paradigm/inflection[@value]")
+                ]
+            ),
+        ]
+
+        DATA.append(entry)
+
+    for rank, (word, translation, inflections) in enumerate(DATA, start=2):
+        items.append(
+            DropdownItem(
+                word,
+                translation,
+                inflections,
+            )
+        )
+
+    def get_items(self, input_state: InputState) -> list[DropdownItem]:
+        matches = [
+            item
+            for item in items
+            if input_state.value.lower() in item.main.plain.lower()
+            or input_state.value.lower() in item.left_meta.plain.lower()
+            or input_state.value.lower() in item.right_meta.plain.lower()
+        ]
+
+        return sorted(
+            matches,
+            key=lambda v: editdistance.eval(v.main.plain, input_state.value.lower()),
+        )[:MAX_DROPDOWN_ITEMS]
+
+    def get_answer(self, search_word) -> str:
+        answer = ""
+        for word in self.root.findall(".//word[@value]"):
+            word_value = word.attrib["value"]
+            inflections = word.findall("./paradigm/inflection[@value]")
+
+            if word_value == search_word or any(
+                inflection.attrib["value"] == search_word for inflection in inflections
+            ):
+                comment = word.get("comment", "")
+                answer += "## " + word_value
+
+                if inflections:
+                    answer += (
+                        "\n`"
+                        + (
+                            ", ".join(
+                                inflection.attrib["value"] for inflection in inflections
+                            )
+                        )
+                        + "`\n"
+                    )
+
+                translations = word.findall("./translation[@value]")
+                if translations:
+                    answer += "\n\n**"
+
+                    answer += ", ".join(
+                        (
+                            f"{translation.attrib['value']}</span> ({translation.attrib['comment']})"
+                            if translation.get("comment", "")
+                            else "" + translation.attrib["value"] + ""
+                        )
+                        for translation in translations
+                    )
+                    answer += "**"
+                if comment:
+                    answer += f"\n\n*{comment}*"
+                synonyms = word.findall("./synonym[@value]")
+                if synonyms:
+                    answer += "\n\n### Synonyms\n"
+                    answer += ", ".join(synonym.attrib["value"] for synonym in synonyms)
+                    answer += ""
+
+                examples = word.findall(".//example[@value]")
+                if examples:
+                    answer += "\n\n### Examples"
+                    for example in examples:
+                        example_translation = example.find(".//translation[@value]")
+                        if example_translation is not None:
+                            answer += f"\n- {example.attrib['value']}: *{example_translation.attrib['value']}*"
+                    answer += ""
+
+                idioms = word.findall("./idiom[@value]")
+                if idioms:
+                    answer += "\n\n ### Idioms"
+                    for idiom in idioms:
+                        idiom_translation = idiom.find("./translation[@value]")
+                        if idiom_translation is not None:
+                            answer += f"\n- {idiom.attrib['value']}: *{idiom_translation.attrib['value']}*"
+                    answer += ""
+
+                return answer
+
+        return "Word not found"
 
     CSS_PATH = "style.tcss"
 
@@ -183,7 +182,7 @@ class SvenskaApp(App):
         """Create child widgets for the app."""
         yield AutoComplete(
             Input(classes="search"),
-            Dropdown(items=get_items),
+            Dropdown(items=self.get_items),
         )
         yield Markdown()
         yield Footer()
@@ -193,7 +192,7 @@ class SvenskaApp(App):
         global visible_word
         visible_word = event.item.main.plain.lower()
         viewer = self.query_one(Markdown)
-        viewer.update(get_answer(visible_word))
+        viewer.update(self.get_answer(visible_word))
         viewer.display = True
         viewer.focus()
 

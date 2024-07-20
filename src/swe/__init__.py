@@ -2,20 +2,22 @@
 
 import os
 import argparse
+import requests
 import xml.etree.ElementTree as ET
 
 from swe.sounds import play_word
 from swe.common import xml_file
-from swe.interactive import SvenskaApp
 from swe.cli import print_translations
 
 
 if not os.path.exists(xml_file):
-    print(
-        "Before using swe, you need to download the latest dictionary file.\n\nDownload it from https://folkets-lexikon.csc.kth.se/folkets/folkets_sv_en_public.xml \nThe file is expected at",
-        xml_file,
-    )
-    exit(1)
+    print("Downloading dictionary... this will only happen once.")
+    url = "https://folkets-lexikon.csc.kth.se/folkets/folkets_sv_en_public.xml"
+    os.makedirs(os.path.dirname(xml_file), exist_ok=True)
+    response = requests.get(url)
+    with open(xml_file, "wb") as f:
+        f.write(response.content)
+    print("Done.")
 
 
 def search_words(xml_file, search_string):
@@ -27,11 +29,6 @@ def search_words(xml_file, search_string):
         if search_string in word.attrib["value"]
     ]
     return result
-
-
-if __name__ == "__main__":
-    app = SvenskaApp()
-    app.run()
 
 
 def main():
@@ -66,12 +63,7 @@ def main():
     elif args.word:
         print_translations(xml_file, args.word)
     else:
+        from swe.interactive import SvenskaApp
+
         app = SvenskaApp()
         app.run()
-
-
-# asyncio.run(main())
-if __name__ == "__main__":
-    # main()
-    app = SvenskaApp()
-    app.run()
