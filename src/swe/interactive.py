@@ -7,7 +7,6 @@ from markdownify import markdownify
 from textual import on
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Input, Markdown
-from textual.binding import Binding
 from textual.app import App, ComposeResult
 
 from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
@@ -134,9 +133,9 @@ class SvenskaApp(App):
     CSS_PATH = "style.tcss"
 
     BINDINGS = [
-        Binding("ctrl+q", "quit", "Quit", priority=True),
-        Binding("ctrl+p", "play", "Play", priority=True),
-        Binding("ctrl+s", "wiktionary", "Wiktionary", priority=True),
+        ("ctrl+q", "quit", "Quit"),
+        ("ctrl+p", "play", "Play"),
+        ("ctrl+s", "wiktionary", "Wiktionary"),
     ]
 
     def action_play(self) -> None:
