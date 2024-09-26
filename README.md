@@ -1,10 +1,8 @@
 # swe - Swedish-English Dictionary
 
-<p align="center">
-<img width="516" height="469" src="https://github.com/bjesus/swe/assets/55081/839c6420-2d91-4fb3-bab9-29494974ad6c" />
-</p>
+`swe` is a command-line interface to the great Swedish-English dictionary "[Folkets lexikon](https://folkets-lexikon.csc.kth.se/folkets/om.en.html)". It works 100% offline. Users can explore translations, idioms, synonoms and more. It can also be used for finding words containing specific substrings, and for listening to the pronunciations of words. Since version 0.3, it can also access [Wiktionary](https://sv.wiktionary.org).
 
-`swe` is a command-line interface to the great Swedish-English dictionary "[Folkets lexikon](https://folkets-lexikon.csc.kth.se/folkets/om.en.html)". It works 100% offline. Users can explore translations, idioms, synonoms and more. It can also be used for finding words containing specific substrings, and for listening to the pronunciations of words.
+https://github.com/user-attachments/assets/097a29ee-c829-4f6a-acd7-a83e93ee742d
 
 ## Installation
 
@@ -25,6 +23,6 @@ You will need to restart Zsh for the changes to take effect.
 
 ## Usage
 
-1. `swe -s ord` - Print all words containing the specified substring ("ord" in this example).
+1. `swe` - Run the interactive Swe mode
 2. `swe ord` - Print the translation for the specified word
-3. `swe` - Play the sound of the latest translated word
+3. `swe -s ord` - Print all words containing the specified substring ("ord" in this example).
