@@ -149,7 +149,7 @@ class SvenskaApp(App):
         )
 
         tree = html.fromstring(a.text)
-        wiktionary_content = "hello2"
+        wiktionary_content = a.text
         mw_parser_output = tree.find_class("mw-parser-output")
         if not mw_parser_output:
             wiktionary_content = "not found"
@@ -157,13 +157,11 @@ class SvenskaApp(App):
         html_content = html.tostring(
             mw_parser_output[0], pretty_print=False, encoding="unicode"
         )
-        wiktionary_content = "hello3"
         svenska_div = mw_parser_output[0].get_element_by_id("Svenska")
         if not svenska_div:
             wiktionary_content = "not found"
-        wiktionary_content = "hello4"
         content_after_svenska = []
-        for element in svenska_div.getparent().itersiblings():
+        for element in svenska_div.getparent().getnext():
             content = html.tostring(element, pretty_print=False, encoding="unicode")
             if content and 'id="Översättningar"' in content:
                 break
@@ -198,5 +196,5 @@ class SvenskaApp(App):
     @on(Markdown.LinkClicked)
     def navigate(self, event: Markdown.LinkClicked) -> None:
         global visible_word
-        visible_word = event.href.split("/")[2].split("#")[0]
+        visible_word = event.href.split("/")[4].split("#")[0]
         self.action_wiktionary()
