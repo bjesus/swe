@@ -15,8 +15,8 @@ The repository includes a Zsh completion file [\_swe](_swe) to enhance the user 
 To enable Zsh completion, do the following:
 
 ```
-$ cp swe/_swe ~/.zsh/completion/_swe
-$ chmod +x ~/.zsh/completion/_swe
+cp swe/_swe ~/.zsh/completion/_swe
+chmod +x ~/.zsh/completion/_swe
 ```
 
 You will need to restart Zsh for the changes to take effect.
