@@ -10,10 +10,12 @@ dependencies = [
   "markdownify>=0.12.1",
   "editdistance>=0.8.1",
   "requests>=2.32.3",
+  "xdg-base-dirs>=6.0.2",
+  "toml>=0.10.2",
 ]
 readme = "README.md"
 license = "MIT"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 
 [project.scripts]
 "swe" = "swe:main"

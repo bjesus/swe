@@ -1,17 +1,21 @@
 import xml.etree.ElementTree as ET
 import editdistance
 import requests
+import os
+import toml
+import subprocess
 
 from lxml import html
 from markdownify import markdownify
 from textual import on
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Input, Markdown
-from textual.app import App, ComposeResult
 
 from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
 from swe.common import xml_file
 from swe.sounds import play_word
+
+from xdg_base_dirs import xdg_config_home
 
 items = []
 MAX_DROPDOWN_ITEMS = 50
@@ -131,12 +135,61 @@ class SvenskaApp(App):
         return "Word not found"
 
     CSS_PATH = "style.tcss"
+    config_dir = xdg_config_home()
+
+    # Step 2: Define the path to the toml config file
+    config_file = os.path.join(config_dir, "swe.toml")
+
+    global config
+    config = {}
+    # Step 3: Check if the file exists
+    if os.path.exists(config_file):
+        try:
+            config = toml.load(config_file)
+        except toml.TomlDecodeError as e:
+            print(f"Error reading TOML file: {e}")
 
     BINDINGS = [
         ("ctrl+q", "quit", "Quit"),
         ("ctrl+p", "play", "Play"),
         ("ctrl+s", "wiktionary", "Wiktionary"),
     ]
+
+    if "custom_command" in config:
+        BINDINGS.append(
+            ("ctrl+t", "custom", config["custom_command_title"] or "Custom")
+        )
+
+    def action_custom(self) -> None:
+        # Step 5: Check if the `custom_command` key exists in the TOML file
+        if "custom_command" not in config:
+            print("custom_command key not found in the config file.")
+            return
+
+        # Step 6: Get the custom command from the TOML file
+        custom_command = config["custom_command"]
+
+        # Step 7: Execute the command and pass "foo" to it via stdin
+        try:
+            process = subprocess.Popen(
+                custom_command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+            )
+            stdout, stderr = process.communicate(
+                input=(visible_word + "\n" + self.get_answer(visible_word)).encode()
+            )
+
+            # Print the output or any error from the command
+            if process.returncode == 0:
+                print(f"Command output: {stdout.decode()}")
+            else:
+                print(f"Error executing command: {stderr.decode()}")
+
+        except Exception as e:
+            print(f"Error executing the command: {e}")
 
     def action_play(self) -> None:
         play_word(visible_word)
