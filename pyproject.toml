@@ -1,10 +1,10 @@
 [project]
 name = "swe"
-version = "0.4.0"
+version = "0.5.0"
 description = "Command line interface for Folkets lexikon, the Swedish-English dictionary"
 authors = [{ name = "Yo'av Moshe", email = "swe@yoavmoshe.com" }]
 dependencies = [
-  "textual==0.72.0",
+  "textual==3.6.0",
   "mwclient>=0.10.1",
   "lxml==5.2.2",
   "markdownify>=0.12.1",
@@ -29,7 +29,7 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 managed = true
-dev-dependencies = []
+dev-dependencies = ["textual-dev>=1.7.0"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

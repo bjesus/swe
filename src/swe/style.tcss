@@ -12,3 +12,25 @@ Screen {
   color: $success-lighten-3;
 }
 
+    AutoComplete {
+        /* Customize the dropdown */
+        & AutoCompleteList {
+            color: $text-primary;  /* The color of the text */
+        }
+
+        /* Customize the matching substring highlighting */
+        & .autocomplete--highlight-match {
+            color: $text-accent;
+            text-style: bold;
+        }
+
+        /* Customize the text the cursor is over */
+        & .option-list--option-highlighted {
+            color: $text-success;
+            text-style: bold;
+        }
+    }
+
+.blue {
+    max-width: 100%;
+  }

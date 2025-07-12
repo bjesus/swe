@@ -1,15 +1,14 @@
 from swe.common import xml_file
 import xml.etree.ElementTree as ET
 import os
-from subprocess import DEVNULL, STDOUT, check_call
+from subprocess import Popen, DEVNULL, STDOUT
 
 
 def play_file(word):
     iso_word = encode_iso(word)
     sound_url = f"http://lexin.nada.kth.se/sound/{iso_word}.mp3"
     os.environ["MPLAYER_VERBOSE"] = "-4"
-    # os.system(f"mplayer -really-quiet {sound_url}")
-    check_call(["mplayer", "-really-quiet", sound_url], stdout=DEVNULL, stderr=STDOUT)
+    Popen(["mplayer", "-really-quiet", sound_url], stdout=DEVNULL, stderr=STDOUT)
 
 
 def get_sound_file(xml_file, search_word):

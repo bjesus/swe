@@ -11,23 +11,40 @@ from textual import on
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Input, Markdown
 
-from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
+# from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
+from textual_autocomplete import AutoComplete, DropdownItem, TargetState
 from swe.common import xml_file
 from swe.sounds import play_word
 
 from xdg_base_dirs import xdg_config_home
 
+visible_word = ""
 items = []
+DATA = []
+
 MAX_DROPDOWN_ITEMS = 50
 
 
 class SvenskaApp(App):
     """A Swedish-English dictionary."""
 
-    visible_word = ""
-    wiktionary_content = ""
+    TITLE = "swe"
+    config_dir = xdg_config_home()
 
-    DATA = []
+    # Step 2: Define the path to the toml config file
+    config_file = os.path.join(config_dir, "swe.toml")
+
+    global config
+    theme_variables = {}
+    config = {}
+    # Step 3: Check if the file exists
+    if os.path.exists(config_file):
+        try:
+            config = toml.load(config_file)
+        except toml.TomlDecodeError as e:
+            print(f"Error reading TOML file: {e}")
+
+    wiktionary_content = ""
 
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -45,120 +62,89 @@ class SvenskaApp(App):
 
         DATA.append(entry)
 
-    for rank, (word, translation, inflections) in enumerate(DATA, start=2):
-        items.append(
-            DropdownItem(
-                word,
-                translation,
-                inflections,
-            )
-        )
-
-    def get_items(self, input_state: InputState) -> list[DropdownItem]:
-        matches = [
-            item
-            for item in items
-            if input_state.value.lower() in item.main.plain.lower()
-            or input_state.value.lower() in item.left_meta.plain.lower()
-            or input_state.value.lower() in item.right_meta.plain.lower()
-        ]
-
-        return sorted(
-            matches,
-            key=lambda v: editdistance.eval(v.main.plain, input_state.value.lower()),
-        )[:MAX_DROPDOWN_ITEMS]
-
-    def get_answer(self, search_word) -> str:
-        answer = ""
-        for word in self.root.findall(".//word[@value]"):
-            word_value = word.attrib["value"]
-            inflections = word.findall("./paradigm/inflection[@value]")
-
-            if word_value == search_word or any(
-                inflection.attrib["value"] == search_word for inflection in inflections
-            ):
-                comment = word.get("comment", "")
-                answer += "## " + word_value
-
-                if inflections:
-                    answer += (
-                        "\n`"
-                        + (
-                            ", ".join(
-                                inflection.attrib["value"] for inflection in inflections
-                            )
-                        )
-                        + "`\n"
-                    )
-
-                translations = word.findall("./translation[@value]")
-                if translations:
-                    answer += "\n\n**"
-
-                    answer += ", ".join(
-                        (
-                            f"{translation.attrib['value']}</span> ({translation.attrib['comment']})"
-                            if translation.get("comment", "")
-                            else "" + translation.attrib["value"] + ""
-                        )
-                        for translation in translations
-                    )
-                    answer += "**"
-                if comment:
-                    answer += f"\n\n*{comment}*"
-                synonyms = word.findall("./synonym[@value]")
-                if synonyms:
-                    answer += "\n\n### Synonyms\n"
-                    answer += ", ".join(synonym.attrib["value"] for synonym in synonyms)
-                    answer += ""
-
-                examples = word.findall(".//example[@value]")
-                if examples:
-                    answer += "\n\n### Examples"
-                    for example in examples:
-                        example_translation = example.find(".//translation[@value]")
-                        if example_translation is not None:
-                            answer += f"\n- {example.attrib['value']}: *{example_translation.attrib['value']}*"
-                    answer += ""
-
-                idioms = word.findall("./idiom[@value]")
-                if idioms:
-                    answer += "\n\n ### Idioms"
-                    for idiom in idioms:
-                        idiom_translation = idiom.find("./translation[@value]")
-                        if idiom_translation is not None:
-                            answer += f"\n- {idiom.attrib['value']}: *{idiom_translation.attrib['value']}*"
-                    answer += ""
-
-                return answer
-
-        return "Word not found"
-
     CSS_PATH = "style.tcss"
-    config_dir = xdg_config_home()
-
-    # Step 2: Define the path to the toml config file
-    config_file = os.path.join(config_dir, "swe.toml")
-
-    global config
-    config = {}
-    # Step 3: Check if the file exists
-    if os.path.exists(config_file):
-        try:
-            config = toml.load(config_file)
-        except toml.TomlDecodeError as e:
-            print(f"Error reading TOML file: {e}")
 
     BINDINGS = [
         ("ctrl+q", "quit", "Quit"),
         ("ctrl+p", "play", "Play"),
         ("ctrl+s", "wiktionary", "Wiktionary"),
     ]
-
-    if "custom_command" in config:
+    ENABLE_COMMAND_PALETTE = False
+    if config.get("custom_command", False) and not config.get(
+        "auto_run_custom_command", False
+    ):
         BINDINGS.append(
-            ("ctrl+t", "custom", config["custom_command_title"] or "Custom")
+            ("ctrl+t", "custom", config.get("custom_command_title", "Custom"))
         )
+
+    def on_mount(self) -> None:
+        global DATA
+        self.theme = config.get("theme", "textual-dark")
+
+        for rank, (word, translation, inflections) in enumerate(DATA, start=2):
+            items.append([word, translation, inflections, str(rank)])
+
+    def get_answer(self, id) -> str:
+        global visible_word
+        global visible_word_id
+        search_word = items[id][0]
+        visible_word_id = id
+        visible_word = search_word
+        answer = ""
+        word = self.root.findall(".//word[@value]")[id]
+        word_value = word.attrib["value"]
+        inflections = word.findall("./paradigm/inflection[@value]")
+
+        comment = word.get("comment", "")
+        answer += "## " + word_value
+
+        if inflections:
+            answer += (
+                "\n`"
+                + (", ".join(inflection.attrib["value"] for inflection in inflections))
+                + "`\n"
+            )
+
+        translations = word.findall("./translation[@value]")
+        if translations:
+            answer += "\n\n**"
+
+            answer += ", ".join(
+                (
+                    f"{translation.attrib['value']}</span> ({translation.attrib['comment']})"
+                    if translation.get("comment", "")
+                    else "" + translation.attrib["value"] + ""
+                )
+                for translation in translations
+            )
+            answer += "**"
+        if comment:
+            answer += f"\n\n*{comment}*"
+        synonyms = word.findall("./synonym[@value]")
+        if synonyms:
+            answer += "\n\n### Synonyms\n"
+            answer += ", ".join(synonym.attrib["value"] for synonym in synonyms)
+            answer += ""
+
+        examples = word.findall(".//example[@value]")
+        if examples:
+            answer += "\n\n### Examples"
+            for example in examples:
+                example_translation = example.find(".//translation[@value]")
+                if example_translation is not None:
+                    answer += f"\n- {example.attrib['value']}: *{example_translation.attrib['value']}*"
+            answer += ""
+
+        idioms = word.findall("./idiom[@value]")
+        if idioms:
+            answer += "\n\n ### Idioms"
+            for idiom in idioms:
+                idiom_translation = idiom.find("./translation[@value]")
+                if idiom_translation is not None:
+                    answer += f"\n- {idiom.attrib['value']}: *{idiom_translation.attrib['value']}*"
+            answer += ""
+
+        return answer.strip()
 
     def action_custom(self) -> None:
         # Step 5: Check if the `custom_command` key exists in the TOML file
@@ -179,7 +165,7 @@ class SvenskaApp(App):
                 shell=True,
             )
             stdout, stderr = process.communicate(
-                input=(visible_word + "\n" + self.get_answer(visible_word)).encode()
+                input=(visible_word + "\n" + self.get_answer(visible_word_id)).encode()
             )
 
             # Print the output or any error from the command
@@ -192,6 +178,7 @@ class SvenskaApp(App):
             print(f"Error executing the command: {e}")
 
     def action_play(self) -> None:
+        global visible_word
         play_word(visible_word)
 
     def action_wiktionary(self) -> None:
@@ -226,25 +213,55 @@ class SvenskaApp(App):
 
         self.query_one(Markdown).update(wiktionary_content)
 
-    TITLE = "swe"
-
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
-        yield AutoComplete(
-            Input(classes="search"),
-            Dropdown(items=self.get_items),
-        )
+        topself = self
+
+        class WordChooser(AutoComplete):
+            def get_candidates(self, target_state: TargetState) -> list[DropdownItem]:
+                input = target_state.text.lower()
+                matches = [
+                    item
+                    for item in items
+                    if input in item[0].lower()
+                    or input in item[1].lower()
+                    or input in item[2].lower()
+                ]
+
+                return [
+                    DropdownItem(
+                        main=v[0],
+                        prefix=v[1],
+                        additional=v[2],
+                        id=v[3],
+                        theme=topself.theme_variables,
+                    )
+                    for v in sorted(
+                        matches,
+                        key=lambda v: editdistance.eval(
+                            v[0], target_state.text.lower()
+                        ),
+                    )[:MAX_DROPDOWN_ITEMS]
+                ]
+
+            def post_completion(self, id) -> None:
+                viewer = topself.query_one(Markdown)
+                viewer.update(topself.get_answer(int(id) - 2))
+                viewer.display = True
+                viewer.focus()
+
+                if config.get("custom_command", False) and config.get(
+                    "auto_run_custom_command", False
+                ):
+                    topself.action_custom()
+
+                self.action_hide()
+
+        input = Input(classes="search")
+        yield input
+        yield WordChooser(input)
         yield Markdown()
         yield Footer()
-
-    @on(AutoComplete.Selected)
-    def select_word(self, event: AutoComplete.Selected) -> None:
-        global visible_word
-        visible_word = event.item.main.plain.lower()
-        viewer = self.query_one(Markdown)
-        viewer.update(self.get_answer(visible_word))
-        viewer.display = True
-        viewer.focus()
 
     @on(Markdown.LinkClicked)
     def navigate(self, event: Markdown.LinkClicked) -> None:
