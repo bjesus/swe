@@ -8,6 +8,7 @@ import subprocess
 from lxml import html
 from markdownify import markdownify
 from textual import on
+from textual.binding import Binding
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Input, Markdown
 
@@ -257,7 +258,15 @@ class SvenskaApp(App):
 
                 self.action_hide()
 
-        input = Input(classes="search")
+        class MyInput(Input):
+            BINDINGS = [
+                Binding("escape", "clear"),
+            ]
+
+            def action_clear(self) -> None:
+                self.value = ""
+
+        input = MyInput(classes="search")
         input.styles.layer = "above"
         yield input
         wordchooser = WordChooser(input)
