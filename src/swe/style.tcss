@@ -1,4 +1,5 @@
 Screen {
+    layers: below above;
     layout: grid;
     grid-size: 1 2;
     grid-rows: auto 1fr;

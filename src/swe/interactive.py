@@ -258,9 +258,15 @@ class SvenskaApp(App):
                 self.action_hide()
 
         input = Input(classes="search")
+        input.styles.layer = "above"
         yield input
-        yield WordChooser(input)
-        yield Markdown()
+        wordchooser = WordChooser(input)
+        wordchooser.styles.layer = "above"
+        yield wordchooser
+        markdown = Markdown()
+        markdown.styles.offset = (0, 2)
+        markdown.styles.layer = "below"
+        yield markdown
         yield Footer()
 
     @on(Markdown.LinkClicked)
