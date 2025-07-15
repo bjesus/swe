@@ -8,7 +8,7 @@ from textual.content import Content
 from textual.widgets import Input
 from textual.cache import LRUCache
 
-from textual_autocomplete import DropdownItem, AutoComplete, TargetState
+from swe.textual_autocomplete import DropdownItem, AutoComplete, TargetState
 
 
 class PathDropdownItem(DropdownItem):

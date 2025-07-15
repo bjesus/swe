@@ -1,4 +1,4 @@
-from textual_autocomplete._autocomplete import (
+from swe.textual_autocomplete._autocomplete import (
     AutoComplete,
     AutoCompleteList,
     DropdownItem,
@@ -6,7 +6,7 @@ from textual_autocomplete._autocomplete import (
     TargetState,
 )
 
-from textual_autocomplete._path_autocomplete import PathAutoComplete
+from swe.textual_autocomplete._path_autocomplete import PathAutoComplete
 
 __all__ = [
     "AutoComplete",

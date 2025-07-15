@@ -947,7 +947,7 @@ wheels = [
 
 [[package]]
 name = "swe"
-version = "0.5.1"
+version = "0.5.4"
 source = { editable = "." }
 dependencies = [
     { name = "editdistance" },

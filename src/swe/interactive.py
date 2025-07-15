@@ -13,7 +13,7 @@ from textual.app import App, ComposeResult
 from textual.widgets import Footer, Input, Markdown
 
 # from swe._autocomplete import AutoComplete, Dropdown, DropdownItem, InputState
-from textual_autocomplete import AutoComplete, DropdownItem, TargetState
+from swe.textual_autocomplete import AutoComplete, DropdownItem, TargetState
 from swe.common import xml_file
 from swe.sounds import play_word
 

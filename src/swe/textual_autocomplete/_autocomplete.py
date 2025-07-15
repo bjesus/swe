@@ -22,7 +22,7 @@ from textual.widget import Widget
 from textual.widgets import Input, OptionList
 from textual.widgets.option_list import Option
 
-from textual_autocomplete.fuzzy_search import FuzzySearch
+from swe.textual_autocomplete.fuzzy_search import FuzzySearch
 
 
 @dataclass
