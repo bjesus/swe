@@ -180,14 +180,27 @@ class SvenskaApp(App):
 
     def action_play(self) -> None:
         global visible_word
-        play_word(visible_word)
+        try:
+            play_word(visible_word)
+        except:
+            self.notify(
+                "Please make sure 'mplayer' is installed",
+                severity="error",
+            )
 
     def action_wiktionary(self) -> None:
         global wiktionary_content
 
-        a = requests.get(
-            f"https://sv.wiktionary.org/w/index.php?title={visible_word}&printable=yes"
-        )
+        try:
+            a = requests.get(
+                f"https://sv.wiktionary.org/w/index.php?title={visible_word}&printable=yes"
+            )
+        except:
+            self.notify(
+                "Could not connect to Wiktionary",
+                severity="error",
+            )
+            return
 
         tree = html.fromstring(a.text)
         wiktionary_content = a.text
