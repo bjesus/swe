@@ -193,7 +193,8 @@ class SvenskaApp(App):
 
         try:
             a = requests.get(
-                f"https://sv.wiktionary.org/w/index.php?title={visible_word}&printable=yes"
+                f"https://sv.wiktionary.org/w/index.php?title={visible_word}&printable=yes",
+                headers={"User-Agent": "swe-cli/0.1 (https://github.com/bjesus/swe)"},
             )
         except:
             self.notify(
@@ -203,26 +204,46 @@ class SvenskaApp(App):
             return
 
         tree = html.fromstring(a.text)
-        wiktionary_content = a.text
         mw_parser_output = tree.find_class("mw-parser-output")
         if not mw_parser_output:
-            wiktionary_content = "not found"
+            self.query_one(Markdown).update("not found")
             return
-        html_content = html.tostring(
-            mw_parser_output[0], pretty_print=False, encoding="unicode"
-        )
-        svenska_div = mw_parser_output[0].get_element_by_id("Svenska")
-        if not svenska_div:
-            wiktionary_content = "not found"
+
+        svenska_div = None
+        try:
+            svenska_div = mw_parser_output[0].get_element_by_id("Svenska")
+        except KeyError:
+            # Fallback if ID is not on the H2 itself
+            spans = mw_parser_output[0].xpath('.//span[@id="Svenska"]')
+            if spans:
+                svenska_div = spans[0].getparent()
+
+        if svenska_div is None:
+            self.query_one(Markdown).update("not found")
+            return
+
+        header_container = svenska_div.getparent()
         content_after_svenska = []
-        for element in svenska_div.getparent().getnext():
+
+        def get_all_elements():
+            # Iterate through all following siblings of the header container
+            for sibling in header_container.itersiblings():
+                if sibling.tag == "section":
+                    yield from sibling
+                else:
+                    yield sibling
+
+        for element in get_all_elements():
+            if not isinstance(element.tag, str):
+                continue
             content = html.tostring(element, pretty_print=False, encoding="unicode")
-            if content and 'id="Översättningar"' in content:
+            if 'mw-heading2' in content or "<h2" in content:
+                break
+            if 'id="Översättningar"' in content:
                 break
             content_after_svenska.append(content)
-        html_content_after_svenska = "".join(content_after_svenska)
 
-        wiktionary_content = html_content
+        html_content_after_svenska = "".join(content_after_svenska)
         wiktionary_content = markdownify(html_content_after_svenska)
 
         self.query_one(Markdown).update(wiktionary_content)
